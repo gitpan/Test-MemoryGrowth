@@ -1,7 +1,7 @@
 #  You may distribute under the terms of either the GNU General Public License
 #  or the Artistic License (the same terms as Perl itself)
 #
-#  (C) Paul Evans, 2010 -- leonerd@leonerd.org.uk
+#  (C) Paul Evans, 2010,2014 -- leonerd@leonerd.org.uk
 
 package Test::MemoryGrowth;
 
@@ -9,11 +9,13 @@ use strict;
 use warnings;
 use base qw( Test::Builder::Module );
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 our @EXPORT = qw(
    no_growth
 );
+
+use constant HAVE_DEVEL_MAT_DUMPER => defined eval { require Devel::MAT::Dumper };
 
 =head1 NAME
 
@@ -110,6 +112,14 @@ memory size, false positives can be minimised, by not attempting to assert
 that certain pieces of code do not grow in memory, when in fact it would be
 expected that they do.
 
+=head2 Devel::MAT Integration
+
+If L<Devel::MAT> is installed, this test module will use it to dump the state
+of the memory after a failure. It will create a F<.pmat> file named the same
+as the unit test, but with the trailing F<.t> suffix replaced with
+F<-TEST.pmat> where C<TEST> is the number of the test that failed (in case
+there was more than one).
+
 =cut
 
 =head1 FUNCTIONS
@@ -179,15 +189,22 @@ sub no_growth(&@)
    unless( $ok ) {
       $tb->diag( sprintf "Lost %d bytes of memory over %d calls, average of %.2f per call",
          $increase, $calls, $increase / $calls );
+
+      if( HAVE_DEVEL_MAT_DUMPER ) {
+         my $file = $0;
+         my $num = $tb->current_test;
+
+         # Trim the .t off first then append -$num.pmat, in case $0 wasn't a .t file
+         $file =~ s/\.(?:t|pm|pl)$//;
+         $file .= "-$num\.pmat";
+
+         $tb->diag( "Writing heap dump to $file" );
+         Devel::MAT::Dumper::dump( $file );
+      }
    }
 
    return $ok;
 }
-
-# Keep perl happy; keep Britain tidy
-1;
-
-__END__
 
 =head1 TODO
 
@@ -205,3 +222,7 @@ simple portable mechanism to query this. Patches very much welcome. :)
 =head1 AUTHOR
 
 Paul Evans <leonerd@leonerd.org.uk>
+
+=cut
+
+0x55AA;

@@ -1,5 +1,5 @@
 NAME
-    "Test::MemoryGrowth" - assert that code does not cause growth in memory
+    `Test::MemoryGrowth' - assert that code does not cause growth in memory
     usage
 
 SYNOPSIS
@@ -16,7 +16,6 @@ SYNOPSIS
      no_growth {
         $obj->do_thing;
      } 'Some::Class->do_thing does not grow memory';
-
 
      #### This test will fail ####
      my @list;
@@ -90,6 +89,13 @@ DESCRIPTION
     attempting to assert that certain pieces of code do not grow in memory,
     when in fact it would be expected that they do.
 
+  Devel::MAT Integration
+    If Devel::MAT is installed, this test module will use it to dump the
+    state of the memory after a failure. It will create a .pmat file named
+    the same as the unit test, but with the trailing .t suffix replaced with
+    -TEST.pmat where `TEST' is the number of the test that failed (in case
+    there was more than one).
+
 FUNCTIONS
   no_growth { CODE } %opts, $name
     Assert that the code block does not consume extra memory.
@@ -104,8 +110,7 @@ FUNCTIONS
             for memory usage.
 
 TODO
-    *       Don't be Linux Specific
-
+    * Don't be Linux Specific
             Currently, this module uses a very Linux-specific method of
             determining process memory usage (namely, by inspecting
             /proc/self/status). This should really be fixed to some
